@@ -29,7 +29,7 @@ async function updateUserInfo(req, res, next){
 		return next();	
 
 	}catch(err){
-		console.error("Error updating user info");
+		console.error("Error updating user info: ", err.message);
 		return next();
 	}
 

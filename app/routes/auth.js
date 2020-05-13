@@ -1,38 +1,52 @@
 const rp = require('request-promise');
 const express = require('express');
-const simpleOauth = require('simple-oauth2');
-const sessions = require('client-sessions');
-const Cryptr = require('cryptr');
 const url = require('url');
+// const simpleOauth = require('simple-oauth2');
+// const sessions = require('client-sessions');
+const oauth = require('../services/oauth.js');
+const Cryptr = require('cryptr');
 const User = require('../api/models/user-model.js');
 
 const cryptr = new Cryptr(process.env.REFRESH_TOKEN_KEY);
 
-const oauth2 = simpleOauth.create({
-	client: {
-		id: process.env.DISCORD_APP_ID,
-		secret: process.env.DISCORD_APP_SECRET 
-	},
-	auth: {
-		tokenHost: 'https://discordapp.com',
-		tokenPath: '/api/oauth2/token',
-		authorizePath: '/api/oauth2/authorize',
-		revokePath: '/api/oauth2/token/revoke'
-	}
-});
+// const oauth2 = simpleOauth.create({
+// 	client: {
+// 		id: process.env.DISCORD_APP_ID,
+// 		secret: process.env.DISCORD_APP_SECRET 
+// 	},
+// 	auth: {
+// 		tokenHost: 'https://discordapp.com',
+// 		tokenPath: '/api/oauth2/token',
+// 		authorizePath: '/api/oauth2/authorize',
+// 		revokePath: '/api/oauth2/token/revoke'
+// 	}
+// });
 
 module.exports = {
 /********/
 
 //Login route
 login: express.Router().get('/', (req, res) => {
-	const authorizationUri = oauth2.authorizationCode.authorizeURL({
-		redirect_uri: `${process.env.APP_URL}/callback`,	
-		scope: 'identify guilds',
-		state: encodeURIComponent(req.header('Referer'))
-	});
+	// const authorizationUri = oauth2.authorizationCode.authorizeURL({
+	// 	redirect_uri: `${process.env.APP_URL}/callback`,	
+	// 	scope: 'identify guilds',
+	// 	state: encodeURIComponent(req.header('Referer'))
+	// });
+	try {
 
-	res.redirect(authorizationUri);
+		const authorizationUri = oauth.tokenRequest({
+			code: req.query.code,
+			grantType: 'authorization_code',
+			scope: ['identify', 'guilds'],
+			state: encodeURIComponent(req.header('Referer'))	
+		});
+	} catch(err) {
+		console.log(err.message);
+	}
+
+	// console.log(authorizationUri);
+	return res.send('success');
+	// res.redirect(authorizationUri);
 }),
 
 //Logout route (heh it rhymes)
